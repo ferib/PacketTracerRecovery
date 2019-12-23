@@ -6,3 +6,18 @@ After that user needs to use "Ferib" as password and can now gain access to the 
 # TL;TR
 This tool changes the PacketTracer password to "Ferib".
 You can then change the password to whatever you like in the 'Activity Wizard'.
+
+# How To
+* Start PacketTracer7
+* Open your .pka
+* Start PacketTracerPatcher.exe
+* Go to PacketTracer7 and navigate to Extensions -> Activity Wizard (or press ctrl+w)
+* Enter 'Ferib' as password
+* Select Password in the left navigation
+* Enter new password and click Enable Password
+
+*Password has now been changed, in order to save the changes, click on Save or Save As*
+
+# Disclaimer
+Please use at your own risk.
+
