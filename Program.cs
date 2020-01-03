@@ -98,7 +98,20 @@ namespace BadTime
             Proc_All_Access = 2035711
         }
         #endregion ImportDLL
-        private static byte[] OriginalCode = { 0x41, 0xBC, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x64, 0x24, 0x20, 0x41, 0x83, 0xC9, 0xFF };
+
+        /*
+                41 BC 01 00 00 00 44 89 64 24 20 41 83 C9 FF
+                41 BE 01 00 00 00 44 89 74 24 20 41 83 C9 FF
+                41 ?? 01 00 00 00 44 89 ?? 24 20 41 83 ?? FF
+
+                Call before Qt5Core.QString::compate_helper & after Qt5Core.QByteArray::begin 
+         */
+
+        //private static byte[] OriginalCode = { 0x41, 0xBC, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x64, 0x24, 0x20, 0x41, 0x83, 0xC9, 0xFF }; //7.1
+        //private static byte[] OriginalCode = { 0x41, 0xBE, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x74, 0x24, 0x20, 0x41, 0x83, 0xC9, 0xFF }; //7.3
+        //private static byte[] OriginalCode = { 0x41, 0x90, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x90, 0x24, 0x20, 0x41, 0x83, 0x90, 0xFF }; //NOP == ??; wildcards for all registers except ESP
+        private static byte[] OriginalCode = { 0x41, 0x90, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x90, 0x24, 0x20, 0x41, 0x83, 0x90, 0xFF, 0x4D, 0x90, 0x90, 0x90, 0x90, 0xff, 0x15, 0x90, 0x90, 0x90, 0x90, 0x45 };
+        //41 ?? 01 00 00 00 44 89 ?? 24 20 41 83 ?? ff 4D ?? ?? ?? ?? FF 15 ?? ?? ?? ?? 45
         private static long PatchOffsetLocation = 0x00;
 
         static void Main(string[] args)
@@ -176,8 +189,16 @@ namespace BadTime
 
             //Patch at Base+0x148046C
             //AoB: 0x41, 0xBC, 0x01, 0x00, 0x00, 0x00, 0x44, 0x89, 0x64, 0x24, 0x20, 0x41, 0x83, 0xC9, 0xFF
-            
-            PatchOffsetLocation = AOBScan(wHandle, OriginalCode);
+
+            PatchOffsetLocation = AOBScan(wHandle, ref OriginalCode);
+            //NOP everything after 15 bytes
+            for(int i = 14; i < OriginalCode.Length; i++)
+            {
+                OriginalCode[i] = 0x90;
+            }
+           
+
+
             //PatchOffsetLocation = AOBScan(wHandle, DetourPattern) +3;
             if (PatchOffsetLocation > 0x0100)
             {
@@ -246,7 +267,7 @@ namespace BadTime
         }
 
         //AoB scan function is used to locate original code, this supports multiple PacketTracer version (compared to using a offset)
-        private static long AOBScan(IntPtr rHandle, byte[] AoBpattern)
+        private static long AOBScan(IntPtr rHandle, ref byte[] AoBpattern)
         {
             long result = 0;
             // getting minimum & maximum address
@@ -291,10 +312,18 @@ namespace BadTime
                         {
                             if (j == AoBpattern.Length - 1)
                             {
+                                //restore pattern from wildmarks
+                                for (long x = AoBpattern.Length-1; x >= 0; x--)
+                                {
+                                    AoBpattern[x] = buffer[i + j - AoBpattern.Length + 1 + x];
+                                }
                                 return result = (long)proc_min_address + i;
                             }
-                            if (buffer[i + j] != AoBpattern[j])
-                                break;
+                            if(AoBpattern[j] != 0x90)//NOP (0x90) was used as wildcard, restore it
+                            {
+                                if (buffer[i + j] != AoBpattern[j])
+                                    break;
+                            }
                         }
                     }
                 }
@@ -306,6 +335,8 @@ namespace BadTime
                 proc_min_address_l += (ulong)mem_basic_info.RegionSize;
                 proc_min_address = (IntPtr)proc_min_address_l;
             }
+            //Console.WriteLine("Pathcing at: 0x" + result.ToString("X"));
+
             return result;
         }
     }
