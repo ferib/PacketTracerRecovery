@@ -8,7 +8,7 @@ This tool changes the PacketTracer password to "Ferib".
 You can then change the password to whatever you like in the 'Activity Wizard'.
 
 # Video Showcase
-[![gif](https://github.com/ferib/PacketTracerRecovery/tree/master/img/showcase.gif)]
+![gif](https://github.com/ferib/PacketTracerRecovery/tree/master/img/showcase.gif)
 
 # How To
 * Start PacketTracer7
