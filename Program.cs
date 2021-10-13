@@ -182,12 +182,8 @@ namespace BadTime
 
             PatchOffsetLocation = AOBScan(wHandle, ref OriginalCode);
             //NOP everything after 15 bytes
-            for(int i = 14; i < OriginalCode.Length; i++)
-            {
+            for(int i = 15; i < OriginalCode.Length; i++)
                 OriginalCode[i] = 0x90;
-            }
-           
-
 
             //PatchOffsetLocation = AOBScan(wHandle, DetourPattern) +3;
             if (PatchOffsetLocation > 0x0100)
@@ -226,11 +222,11 @@ namespace BadTime
             }
 
             //Write LongJumpBack
-            byte[] LongJump = { 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xDE, 0xAD, 0xC0, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE,0x90 }; // + QWORD
+            byte[] LongJump = { 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xDE, 0xAD, 0xC0, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE, 0x90 }; // + QWORD
             byte[] ReturnAddress = BitConverter.GetBytes(PatchOffsetLocation + 14);
             for(int i = 0; i < 8; i++)
             {
-                LongJump[i + 6] = ReturnAddress[ i];
+                LongJump[i + 6] = ReturnAddress[i];
             }
             WriteProcessMemory(wHandle, hAlloc + PWoverwrite.Length + OriginalCode.Length, LongJump, LongJump.Length, out BytesWritten);
             if (BytesWritten == 0)
@@ -240,7 +236,7 @@ namespace BadTime
             }
 
             //Write Hook LongJump
-            byte[] LongJump2 = { 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xDE, 0xAD, 0xC0, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE,0x90 }; // + QWORD
+            byte[] LongJump2 = { 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xDE, 0xAD, 0xC0, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE, 0x90 }; // + QWORD
             byte[] ReturnAddress2 = BitConverter.GetBytes(hAlloc);
             for (int i = 0; i < 8; i++)
             {
